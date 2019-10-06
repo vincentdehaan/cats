@@ -263,4 +263,14 @@ class EvalSuite extends CatsSuite {
       assert(n2 == 1)
     }
   }
+
+  test("FlatMap.memoize functions correctly") {
+    val f = Eval.now(7).flatMap(n => Eval.now(n + 2))
+
+    val mem = f.memoize
+
+    mem.value should ===(9)
+  }
+
+
 }

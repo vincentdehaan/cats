@@ -108,6 +108,13 @@ sealed abstract class Eval[+A] extends Serializable { self =>
    * Later[A] with an equivalent computation will be returned.
    */
   def memoize: Eval[A]
+
+  /**
+   * Return a string representation that may not be referentially
+   * transparant as this may mess up execution order.
+   */
+
+  def describe: String
 }
 
 /**
@@ -120,6 +127,8 @@ sealed abstract class Eval[+A] extends Serializable { self =>
  */
 final case class Now[A](value: A) extends Eval[A] {
   def memoize: Eval[A] = this
+
+  def describe: String = s"Now($value)"
 }
 
 /**
@@ -153,6 +162,8 @@ final class Later[A](f: () => A) extends Eval[A] {
   }
 
   def memoize: Eval[A] = this
+
+  def describe: String = s"Later(() => ${f()})"
 }
 
 object Later {
@@ -172,6 +183,8 @@ object Later {
 final class Always[A](f: () => A) extends Eval[A] {
   def value: A = f()
   def memoize: Eval[A] = new Later(f)
+
+  def describe: String = s"Always(() => ${f()})"
 }
 
 object Always {
@@ -255,6 +268,8 @@ object Eval extends EvalInstances {
 
     def memoize: Eval[A] = Memoize(this)
     def value: A = evaluate(this)
+
+    def describe: String = s"Defer(() => ${thunk().describe})"
   }
 
   /**
@@ -305,6 +320,8 @@ object Eval extends EvalInstances {
 
     def memoize: Eval[A] = Memoize(this)
     def value: A = evaluate(this)
+
+    def describe: String = s"FlatMap(start = () => ${start().describe}, run = ...)" // TODO: can we improve this?
   }
 
   private case class Memoize[A](eval: Eval[A]) extends Eval[A] {
@@ -318,6 +335,8 @@ object Eval extends EvalInstances {
           result = Some(a)
           a
       }
+
+    def describe: String = s"Memoize(${eval.describe})"
   }
 
   private def evaluate[A](e: Eval[A]): A = {
@@ -330,7 +349,8 @@ object Eval extends EvalInstances {
       Now(a)
     }
 
-    @tailrec def loop(curr: L, fs: List[C]): Any =
+    @tailrec def loop(curr: L, fs: List[C]): Any = {
+      //println(s"Starting loop on ${curr.describe} with fs.size = ${fs.size}")
       curr match {
         case c: FlatMap[_] =>
           c.start() match {
@@ -352,8 +372,20 @@ object Eval extends EvalInstances {
           m.result match {
             case Some(a) =>
               fs match {
-                case f :: fs => loop(f(a), fs)
-                case Nil     => a
+                case f :: fs => {
+                  println("AAAAAAAAA" + s"Starting loop on ${curr.describe} with fs.size = ${fs.size}")
+                  throw new Exception
+                  //loop(f(a), fs)
+                }
+                case Nil     => {
+//a
+                  // This code can be reached by:
+                  // scala> val m = Eval.defer(Eval.now(7))
+                  // scala> m.value
+                  // scala> val mm = m.memoize
+                  // scala> mm.value
+                  throw new Exception("This is my test exception" + s"Starting loop on ${curr.describe} with fs.size = ${fs.size}")
+                }
               }
             case None =>
               loop(eval, addToMemo(m) :: fs)
@@ -364,6 +396,7 @@ object Eval extends EvalInstances {
             case Nil     => x.value
           }
       }
+    }
 
     loop(e.asInstanceOf[L], Nil).asInstanceOf[A]
   }
