@@ -14,7 +14,9 @@ private[cats] trait ComposedInvariant[F[_], G[_]] extends Invariant[λ[α => F[G
   def G: Invariant[G]
 
   override def imap[A, B](fga: F[G[A]])(f: A => B)(g: B => A): F[G[B]] =
-    F.imap(fga)(ga => G.imap(ga)(f)(g))(gb => G.imap(gb)(g)(f))
+    F.imap(fga)(ga => G.imap(ga)(f)(g))(gb => {
+      println("HEEE!")
+      G.imap(gb)(g)(f)})
 }
 
 private[cats] trait ComposedFunctor[F[_], G[_]] extends Functor[λ[α => F[G[α]]]] with ComposedInvariant[F, G] { outer =>
@@ -120,7 +122,10 @@ private[cats] trait ComposedContravariant[F[_], G[_]] extends Functor[λ[α => F
   def G: Contravariant[G]
 
   override def map[A, B](fga: F[G[A]])(f: A => B): F[G[B]] =
-    F.contramap(fga)(gb => G.contramap(gb)(f))
+    F.contramap(fga)((gb: G[B]) => {
+      println("Composed.scala, ln 126")
+      G.contramap(gb)(f)
+    })
 }
 
 private[cats] trait ComposedContravariantCovariant[F[_], G[_]] extends Contravariant[λ[α => F[G[α]]]] { outer =>
@@ -167,8 +172,11 @@ private[cats] trait ComposedInvariantApplySemigroupal[F[_], G[_]]
     F.imap(F.product(fa, fb)) {
       case (ga, gb) =>
         G.map2(ga, gb)(_ -> _)
-    } { g: G[(A, B)] =>
+    } { g: G[(A, B)] => {
+
+println("Composed.scala, ln 177")
       (G.map(g)(_._1), G.map(g)(_._2))
+    }
     }
 }
 
@@ -185,7 +193,10 @@ private[cats] trait ComposedInvariantCovariant[F[_], G[_]] extends Invariant[λ[
   def G: Functor[G]
 
   override def imap[A, B](fga: F[G[A]])(f: A => B)(g: B => A): F[G[B]] =
-    F.imap(fga)(ga => G.map(ga)(f))(gb => G.map(gb)(g))
+    F.imap(fga)(ga => G.map(ga)(f))(gb => {
+      println("Composed.scala, ln 197")
+      G.map(gb)(g)
+    })
 }
 
 private[cats] trait ComposedInvariantContravariant[F[_], G[_]] extends Invariant[λ[α => F[G[α]]]] { outer =>
@@ -193,5 +204,8 @@ private[cats] trait ComposedInvariantContravariant[F[_], G[_]] extends Invariant
   def G: Contravariant[G]
 
   override def imap[A, B](fga: F[G[A]])(f: A => B)(g: B => A): F[G[B]] =
-    F.imap(fga)(ga => G.contramap(ga)(g))(gb => G.contramap(gb)(f))
+    F.imap(fga)(ga => G.contramap(ga)(g))(gb => {
+      println("Composed.scala, ln 208")
+      G.contramap(gb)(f)
+    })
 }
