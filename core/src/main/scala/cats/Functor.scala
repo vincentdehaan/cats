@@ -12,7 +12,10 @@ import simulacrum.typeclass
 @typeclass trait Functor[F[_]] extends Invariant[F] { self =>
   def map[A, B](fa: F[A])(f: A => B): F[B]
 
-  override def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B] = map(fa)(f)
+  override def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B] = {
+    println("imap functor.scala ln 16")
+    map(fa)(f)
+  }
 
   // derived methods
 

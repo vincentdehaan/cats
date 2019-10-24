@@ -52,4 +52,18 @@ class ContravariantSuite extends CatsSuite {
     checkAll("ContravariantSemigroupal[Predicate].semigroup", SemigroupTests[Predicate[MiniInt]].semigroup)
   }
 
+  /*test("Contravariant.compose") {
+    type Inner[A] = Function[A, String]
+    type Outer[A] = Function[A, Int]
+
+    //val inner: Inner[Int] = _.toString
+    //val outer: Outer[Int] =
+
+
+    val f: Outer[Inner[Int]] = f => f(1).size
+
+    val c = Contravariant[Outer].compose[Inner].map(f)(i => 1 * 10)
+
+  }*/
+
 }

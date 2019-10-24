@@ -171,7 +171,7 @@ private[cats] trait ComposedInvariantApplySemigroupal[F[_], G[_]]
   def product[A, B](fa: F[G[A]], fb: F[G[B]]): F[G[(A, B)]] =
     F.imap(F.product(fa, fb)) {
       case (ga, gb) =>
-        G.map2(ga, gb)(_ -> _)
+        println("Composed.scala, ln. 174"); G.map2(ga, gb)(_ -> _)
     } { g: G[(A, B)] => {
 
 println("Composed.scala, ln 177")
